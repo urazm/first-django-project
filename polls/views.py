@@ -1,9 +1,11 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.urls import reverse
+from django.views import generic
 
 from .models import Question, Choice
 from django.template import loader
+from django.utils import timezone
 
 
 # Это очень распространенная идиома: загрузить шаблон,
@@ -13,15 +15,31 @@ from django.template import loader
 # Функция render() принимает объект запроса в качестве первого аргумента, имя шаблона
 # в качестве второго аргумента и словарь в качестве необязательного третьего аргумента.
 # Она возвращает объект HttpResponse данного шаблона, отображенный в данном контексте.
-def index(request):
-    latest_question_list = Question.objects.order_by('-pub_date')[:5]
-    context = {'latest_question_list': latest_question_list}
-    return render(request, 'polls/index.html', context)
+
+class IndexView(generic.ListView):
+    template_name = 'polls/index.html'
+    # Переопределяет название контекстной переменной(question_list по умолчанию)
+    context_object_name = 'latest_question_list'
+
+    def get_queryset(self):
+        """Return the last five published questions."""
+
+        return Question.objects.order_by('pub_date')[:5]
 
 
-def detail(request, question_id):
-    question = get_object_or_404(Question, pk=question_id)
-    return render(request, 'polls/detail.html', {'question': question})
+class DetailView(generic.DetailView):
+    """
+    В предыдущих частях руководства шаблоны были снабжены контекстом, который содержит переменные контекста question
+     и latest_question_list. Для DetailView переменная question предоставляется автоматически - поскольку мы используем
+    модель Django (Question)
+    """
+    model = Question
+    template_name = "polls/detail.html"
+
+
+class ResultsView(generic.DetailView):
+    model = Question
+    template_name = 'polls/results.html'
 
 
 def vote(request, question_id):
@@ -43,6 +61,4 @@ def vote(request, question_id):
         return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
 
 
-def results(request, question_id):
-    response = "You're looking at the results of question %s."
-    return HttpResponse(response % question_id)
+

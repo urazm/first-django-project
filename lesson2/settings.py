@@ -32,7 +32,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     # my apps
-    'polls',
+    'polls.apps.PollsConfig',
     # default django apps
     'django.contrib.admin',
     'django.contrib.auth',
